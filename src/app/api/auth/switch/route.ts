@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 
 // Mock auth: switch current user
 export async function POST(request: NextRequest) {
+  const prisma = await getPrisma();
   const { userId } = await request.json();
 
   const profile = await prisma.profile.findUnique({

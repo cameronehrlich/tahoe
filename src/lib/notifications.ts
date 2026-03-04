@@ -1,4 +1,4 @@
-import { prisma } from "./prisma";
+import { getPrisma } from "./prisma";
 
 type NotificationType =
   | "request_submitted"
@@ -22,6 +22,7 @@ interface NotifyParams {
 }
 
 export async function notify(params: NotifyParams) {
+  const prisma = await getPrisma();
   // Check if user has in-app notifications enabled
   const prefs = await prisma.notificationPref.findUnique({
     where: { profileId: params.profileId },
@@ -51,6 +52,7 @@ export async function notifyAdmins(
   body: string,
   excludeUserId?: string
 ) {
+  const prisma = await getPrisma();
   const admins = await prisma.propertyMember.findMany({
     where: {
       propertyId,
@@ -77,6 +79,7 @@ export async function notifyWatchersForOpenDates(
   checkIn: string,
   checkOut: string
 ) {
+  const prisma = await getPrisma();
   // Find active waitlist entries that overlap with the opened dates
   const waitlistEntries = await prisma.waitlistEntry.findMany({
     where: {

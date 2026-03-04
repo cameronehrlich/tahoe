@@ -1,4 +1,4 @@
-import { prisma } from "./prisma";
+import { getPrisma } from "./prisma";
 import { addDays, parseISO } from "date-fns";
 
 // Check if two date ranges conflict, considering the cleaning gap
@@ -24,6 +24,7 @@ export async function findConflicts(
   checkOut: string,
   excludeReservationId?: string
 ) {
+  const prisma = await getPrisma();
   const property = await prisma.property.findUnique({
     where: { id: propertyId },
   });
@@ -74,6 +75,7 @@ export async function getHoldInstancesForRange(
   rangeStart: string,
   rangeEnd: string
 ): Promise<HoldInstance[]> {
+  const prisma = await getPrisma();
   const holds = await prisma.recurringHold.findMany({
     where: { propertyId },
     include: { holder: true },
@@ -141,6 +143,7 @@ export async function getCalendarEvents(
   rangeStart: string,
   rangeEnd: string
 ) {
+  const prisma = await getPrisma();
   // Approved and pending reservations
   const reservations = await prisma.reservation.findMany({
     where: {

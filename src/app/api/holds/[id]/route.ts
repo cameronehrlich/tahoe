@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { requireAdmin, getCurrentUserId } from "@/lib/auth";
 import { notifyWatchersForOpenDates } from "@/lib/notifications";
 import { logActivity } from "@/lib/activity";
@@ -9,6 +9,7 @@ export async function PATCH(
   request: NextRequest,
   { params: paramsPromise }: { params: Promise<{ id: string }> }
 ) {
+  const prisma = await getPrisma();
   const { id } = await paramsPromise;
   const hold = await prisma.recurringHold.findUnique({
     where: { id: id },
@@ -78,6 +79,7 @@ export async function DELETE(
   request: NextRequest,
   { params: paramsPromise }: { params: Promise<{ id: string }> }
 ) {
+  const prisma = await getPrisma();
   const { id } = await paramsPromise;
   const hold = await prisma.recurringHold.findUnique({
     where: { id: id },

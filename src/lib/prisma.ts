@@ -1,6 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+const globalForPrisma = globalThis as unknown as {
+  _prisma: PrismaClient | undefined;
+  _prismaPromise: Promise<PrismaClient> | undefined;
+};
 
 async function createTursoClient(): Promise<PrismaClient> {
   const { PrismaLibSql } = await import("@prisma/adapter-libsql");
@@ -15,18 +18,22 @@ async function createTursoClient(): Promise<PrismaClient> {
   return new PrismaClient({ adapter } as any);
 }
 
-function createLocalClient(): PrismaClient {
-  return new PrismaClient();
-}
-
-async function createPrismaClient(): Promise<PrismaClient> {
-  if (process.env.TURSO_DATABASE_URL) {
-    return createTursoClient();
+export function getPrisma(): Promise<PrismaClient> {
+  if (!globalForPrisma._prismaPromise) {
+    if (process.env.TURSO_DATABASE_URL) {
+      globalForPrisma._prismaPromise = createTursoClient().then((client) => {
+        if (process.env.NODE_ENV !== "production") {
+          globalForPrisma._prisma = client;
+        }
+        return client;
+      });
+    } else {
+      const client = globalForPrisma._prisma ?? new PrismaClient();
+      if (process.env.NODE_ENV !== "production") {
+        globalForPrisma._prisma = client;
+      }
+      globalForPrisma._prismaPromise = Promise.resolve(client);
+    }
   }
-  return createLocalClient();
+  return globalForPrisma._prismaPromise;
 }
-
-export const prisma =
-  globalForPrisma.prisma || (await createPrismaClient());
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

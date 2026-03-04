@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { requireAdmin, getCurrentUserId, getUserRole } from "@/lib/auth";
 import { findConflicts } from "@/lib/calendar";
 import { notify, notifyAdmins, notifyWatchersForOpenDates } from "@/lib/notifications";
@@ -9,6 +9,7 @@ export async function PATCH(
   request: NextRequest,
   { params: paramsPromise }: { params: Promise<{ id: string }> }
 ) {
+  const prisma = await getPrisma();
   const { id } = await paramsPromise;
   const reservation = await prisma.reservation.findUnique({
     where: { id: id },

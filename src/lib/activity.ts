@@ -1,4 +1,4 @@
-import { prisma } from "./prisma";
+import { getPrisma } from "./prisma";
 
 export async function logActivity(
   propertyId: string,
@@ -8,6 +8,7 @@ export async function logActivity(
   targetId?: string,
   metadata?: Record<string, unknown>
 ) {
+  const prisma = await getPrisma();
   await prisma.activityLog.create({
     data: {
       propertyId,

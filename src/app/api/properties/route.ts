@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
 
 // Get all properties the current user has access to
 export async function GET() {
+  const prisma = await getPrisma();
   const userId = await getCurrentUserId();
 
   const memberships = await prisma.propertyMember.findMany({

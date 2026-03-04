@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
 
 export async function GET() {
+  const prisma = await getPrisma();
   const userId = await getCurrentUserId();
 
   const notifications = await prisma.notification.findMany({
@@ -19,6 +20,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
+  const prisma = await getPrisma();
   const userId = await getCurrentUserId();
   const data = await request.json();
 

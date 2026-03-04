@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { requireAdmin, requireMember, getCurrentUserId } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 
@@ -7,6 +7,7 @@ export async function GET(
   request: NextRequest,
   { params: paramsPromise }: { params: Promise<{ id: string }> }
 ) {
+  const prisma = await getPrisma();
   const { id } = await paramsPromise;
   const isMember = await requireMember(id);
   if (!isMember) {
@@ -26,6 +27,7 @@ export async function POST(
   request: NextRequest,
   { params: paramsPromise }: { params: Promise<{ id: string }> }
 ) {
+  const prisma = await getPrisma();
   const { id } = await paramsPromise;
   const isAdmin = await requireAdmin(id);
   if (!isAdmin) {
