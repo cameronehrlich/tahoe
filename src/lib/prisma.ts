@@ -4,7 +4,7 @@ const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
 async function createTursoClient(): Promise<PrismaClient> {
   const { PrismaLibSql } = await import("@prisma/adapter-libsql");
-  const { createClient } = await import("@libsql/client");
+  const { createClient } = await import("@libsql/client/web");
 
   const libsql = createClient({
     url: process.env.TURSO_DATABASE_URL!,
