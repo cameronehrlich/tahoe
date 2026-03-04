@@ -1,0 +1,218 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id        String   @id @default(uuid())
+  fullName  String
+  email     String   @unique
+  avatarUrl String?
+  createdAt DateTime @default(now())
+
+  memberships       PropertyMember[]
+  reservationsRequested Reservation[]   @relation("RequestedBy")
+  reservationsApproved  Reservation[]   @relation("ApprovedBy")
+  reservationsCancelled Reservation[]   @relation("CancelledBy")
+  holdsHeldFor      RecurringHold[]     @relation("HeldFor")
+  holdsCreated      RecurringHold[]     @relation("HoldCreatedBy")
+  waitlistEntries   WaitlistEntry[]
+  watchedRanges     WatchedRange[]
+  notifications     Notification[]
+  notificationPrefs NotificationPref?
+  bulletinPosts     BulletinPost[]
+  activityLogs      ActivityLog[]
+
+  @@map("profiles")
+}
+
+model Property {
+  id              String   @id @default(uuid())
+  name            String
+  slug            String   @unique
+  description     String?
+  address         String?
+  cleaningGapDays Int      @default(3)
+  createdAt       DateTime @default(now())
+
+  members        PropertyMember[]
+  reservations   Reservation[]
+  recurringHolds RecurringHold[]
+  waitlistEntries WaitlistEntry[]
+  watchedRanges  WatchedRange[]
+  notifications  Notification[]
+  pages          PropertyPage[]
+  bulletinPosts  BulletinPost[]
+  activityLogs   ActivityLog[]
+
+  @@map("properties")
+}
+
+model PropertyMember {
+  id         String   @id @default(uuid())
+  propertyId String
+  profileId  String
+  role       String   @default("member")
+  isActive   Boolean  @default(true)
+  joinedAt   DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  profile  Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([propertyId, profileId])
+  @@map("property_members")
+}
+
+model Reservation {
+  id           String    @id @default(uuid())
+  propertyId   String
+  requestedBy  String
+  checkIn      String
+  checkOut     String
+  guestCount   Int       @default(1)
+  status       String    @default("pending")
+  notes        String?
+  adminNotes   String?
+  approvedBy   String?
+  approvedAt   DateTime?
+  denialReason String?
+  cancelledBy  String?
+  cancelledAt  DateTime?
+  cancelReason String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  property       Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  requester      Profile  @relation("RequestedBy", fields: [requestedBy], references: [id])
+  approver       Profile? @relation("ApprovedBy", fields: [approvedBy], references: [id])
+  canceller      Profile? @relation("CancelledBy", fields: [cancelledBy], references: [id])
+
+  @@map("reservations")
+}
+
+model RecurringHold {
+  id            String   @id @default(uuid())
+  propertyId    String
+  heldFor       String
+  createdBy     String
+  label         String
+  patternType   String
+  patternConfig String
+  skippedYears  String   @default("[]")
+  createdAt     DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  holder   Profile  @relation("HeldFor", fields: [heldFor], references: [id])
+  creator  Profile  @relation("HoldCreatedBy", fields: [createdBy], references: [id])
+
+  @@map("recurring_holds")
+}
+
+model WaitlistEntry {
+  id         String   @id @default(uuid())
+  propertyId String
+  profileId  String
+  checkIn    String
+  checkOut   String
+  status     String   @default("active")
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  profile  Profile  @relation(fields: [profileId], references: [id])
+
+  @@map("waitlist_entries")
+}
+
+model WatchedRange {
+  id         String   @id @default(uuid())
+  propertyId String
+  profileId  String
+  startDate  String
+  endDate    String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  profile  Profile  @relation(fields: [profileId], references: [id])
+
+  @@map("watched_ranges")
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  profileId  String
+  propertyId String?
+  type       String
+  title      String
+  body       String?
+  isRead     Boolean  @default(false)
+  metadata   String?
+  createdAt  DateTime @default(now())
+
+  profile  Profile   @relation(fields: [profileId], references: [id])
+  property Property? @relation(fields: [propertyId], references: [id])
+
+  @@map("notifications")
+}
+
+model NotificationPref {
+  id           String  @id @default(uuid())
+  profileId    String  @unique
+  emailEnabled Boolean @default(true)
+  inAppEnabled Boolean @default(true)
+
+  profile Profile @relation(fields: [profileId], references: [id])
+
+  @@map("notification_prefs")
+}
+
+model PropertyPage {
+  id          String   @id @default(uuid())
+  propertyId  String
+  slug        String
+  title       String
+  content     String?
+  sortOrder   Int      @default(0)
+  isAdminOnly Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([propertyId, slug])
+  @@map("property_pages")
+}
+
+model BulletinPost {
+  id         String   @id @default(uuid())
+  propertyId String
+  authorId   String
+  title      String
+  body       String?
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  author   Profile  @relation(fields: [authorId], references: [id])
+
+  @@map("bulletin_posts")
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  propertyId String
+  actorId    String
+  action     String
+  targetType String?
+  targetId   String?
+  metadata   String?
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  actor    Profile  @relation(fields: [actorId], references: [id])
+
+  @@map("activity_logs")
+}
