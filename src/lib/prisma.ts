@@ -6,15 +6,14 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 async function createTursoClient(): Promise<PrismaClient> {
-  const { PrismaLibSql } = await import("@prisma/adapter-libsql");
+  const { PrismaLibSQL } = await import("@prisma/adapter-libsql");
   const { createClient } = await import("@libsql/client/web");
 
   const libsql = createClient({
     url: process.env.TURSO_DATABASE_URL!,
     authToken: process.env.TURSO_AUTH_TOKEN,
   });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adapter = new PrismaLibSql(libsql as any);
+  const adapter = new PrismaLibSQL(libsql);
   return new PrismaClient({ adapter } as any);
 }
 
