@@ -1,6 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../src/generated/prisma";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-const prisma = new PrismaClient();
+const adapter = new PrismaLibSql({ url: "file:./prisma/dev.db" });
+const prisma = new PrismaClient({ adapter });
 
 const PROFILE_SARAH = "a1000000-0000-0000-0000-000000000001";
 const PROFILE_JAKE = "a1000000-0000-0000-0000-000000000002";
